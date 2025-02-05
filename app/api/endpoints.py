@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Request
 from ..core.models import TranscriptionResponse
 from ..services.audio_processor import AudioProcessor
 import tempfile
@@ -8,7 +8,12 @@ router = APIRouter()
 audio_processor = AudioProcessor()
 
 @router.post("/transcribe/", response_model=TranscriptionResponse)
-async def transcribe_audio(file: UploadFile = File(...)):
+async def transcribe_audio(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...)
+):
+    # Le timeout devrait être configuré au niveau du serveur
+    
     if not file.filename.endswith(('.wav', '.mp3', '.m4a')):
         raise HTTPException(status_code=400, detail="File format not supported")
     
