@@ -20,6 +20,10 @@ import requests
 import pandas as pd
 import json
 from json import JSONDecodeError
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Charge les variables d'environnement depuis .env
 
 
 def format_for_llm(segments):
@@ -164,8 +168,10 @@ class MediaProcessor:
         with st.spinner("Transcription AUDIO en cours..."):
             temp_file_path = save_uploaded_file(uploaded_file)
             files = {"file": open(temp_file_path, "rb")}
+            base_url = os.getenv('API_BASE_URL', 'https://dev.bhub.cloud')  # URL par défaut si non définie
             response = requests.post(
-                "https://dev.bhub.cloud/api/v1/transcribe/", files=files
+                f"{base_url}/api/v1/transcribe/",
+                files=files
             )
 
             if response.status_code == 200:
