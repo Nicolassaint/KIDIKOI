@@ -1,8 +1,9 @@
+import requests
+import pandas as pd
+import json
 import streamlit as st
 from audio_recorder_streamlit import audio_recorder
-from pydub import AudioSegment
-from collections import defaultdict, Counter
-from css import TIMESTAMP_STYLE
+
 from utils import (
     call_llm_API,
     analize_text,
@@ -10,20 +11,11 @@ from utils import (
     get_file_type,
     save_uploaded_file,
     transcribe_audio,
-    transcribe_video,
-    create_accessible_timestamps,
     create_word_document,
     process_transcript_with_rag,
+    replace_speaker_ids_with_names,
+    generate_meeting_analysis_prompts,
 )
-from prompts import generate_meeting_analysis_prompts
-import requests
-import pandas as pd
-import json
-from json import JSONDecodeError
-import os
-from dotenv import load_dotenv
-
-load_dotenv()  # Charge les variables d'environnement depuis .env
 
 
 def format_for_llm(segments):
@@ -168,10 +160,8 @@ class MediaProcessor:
         with st.spinner("Transcription AUDIO en cours..."):
             temp_file_path = save_uploaded_file(uploaded_file)
             files = {"file": open(temp_file_path, "rb")}
-            base_url = os.getenv('API_BASE_URL', 'https://dev.bhub.cloud')  # URL par défaut si non définie
             response = requests.post(
-                f"{base_url}/api/v1/transcribe/",
-                files=files
+                "https://dev.bhub.cloud/api/v1/transcribe/", files=files
             )
 
             if response.status_code == 200:
@@ -232,6 +222,12 @@ class MediaProcessor:
                 st.markdown("### Participants Identifiés")
                 for speaker_id, name in st.session_state["speaker_map"].items():
                     st.markdown(f"**{speaker_id}**: {name}")
+                segments_data_new = replace_speaker_ids_with_names(
+                    segments_data, st.session_state["speaker_map"]
+                )
+                # segments_data=segments_data_new
+                dg = pd.DataFrame(segments_data_new)
+                st.dataframe(dg, use_container_width=True, hide_index=True)
 
         st.divider()
 
@@ -276,10 +272,12 @@ class MediaProcessor:
                                     analysis_type,
                                 )
                             else:
+                                # st.write(st.session_state.current_transcription)
                                 prompt = get_prompt(
                                     st.session_state.current_transcription,
                                     analysis_type,
                                 )
+                                # st.write(prompt)
                                 result = call_llm_API(prompt) if prompt else None
 
                             if result:
@@ -316,7 +314,9 @@ class MediaProcessor:
 
         for analysis_type in selected_analyses:
             with st.spinner(f"Analyse {analysis_options[analysis_type]}..."):
-                with st.expander(f"📊 {analysis_options[analysis_type]}", expanded=True):
+                with st.expander(
+                    f"📊 {analysis_options[analysis_type]}", expanded=True
+                ):
                     try:
                         if len(transcript) > 38000:
                             final_analysis, _ = process_transcript_with_rag(
@@ -330,6 +330,7 @@ class MediaProcessor:
                                 st.markdown(final_analysis)
                         else:
                             prompt = get_prompt(transcript, analysis_type)
+                            # st.write(prompt)
                             if prompt:
                                 st.info("Prompt généré avec succès")
                                 analysis = call_llm_API(prompt)
@@ -390,10 +391,9 @@ def record_audio():
                     else:
                         st.session_state.messages = []
                         st.session_state.current_transcription = result["transcription"]
-                        return (
-                            result["transcription"],
-                            {"summary": analize_text(result["transcription"])},
-                        )
+                        return result["transcription"], {
+                            "summary": analize_text(result["transcription"])
+                        }
                 except Exception as e:
                     st.error(f"Erreur: {str(e)}")
                     return None, None

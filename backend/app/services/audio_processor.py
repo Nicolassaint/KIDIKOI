@@ -18,7 +18,9 @@ class AudioProcessor:
 
         processor = AutoProcessor.from_pretrained(settings.MODEL_NAME)
         model = AutoModelForSpeechSeq2Seq.from_pretrained(
-            settings.MODEL_NAME, torch_dtype=torch_dtype, low_cpu_mem_usage=True,
+            settings.MODEL_NAME,
+            torch_dtype=torch_dtype,
+            low_cpu_mem_usage=True,
         ).to(device)
 
         self.asr_pipe = pipeline(
