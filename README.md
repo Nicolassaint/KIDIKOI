@@ -27,6 +27,15 @@ KIDIKOI est une application web innovante conçue pour faciliter la transcriptio
   - Chat contextuel pour interroger le contenu
   - Export des rapports en format Word
 
+## Fonctionnalités à terminer / Suite du projet
+
+- **Fonctionnalités à finir de développer**
+    - Support vidéo
+    - Enregistrement audio en direct
+
+- **Fonctionnalités à venir**
+    - Amélioration de l'identification des locuteurs
+
 ## 💡 Cas d'Usage dans le Service Public
 
 - **Réunions Administratives**
