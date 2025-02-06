@@ -7,18 +7,20 @@ import os
 router = APIRouter()
 audio_processor = AudioProcessor()
 
+
 @router.post("/transcribe/", response_model=TranscriptionResponse)
 async def transcribe_audio(
-    background_tasks: BackgroundTasks,
-    file: UploadFile = File(...)
+    background_tasks: BackgroundTasks, file: UploadFile = File(...)
 ):
     # Le timeout devrait être configuré au niveau du serveur
-    
-    if not file.filename.endswith(('.wav', '.mp3', '.m4a')):
+
+    if not file.filename.endswith((".wav", ".mp3", ".m4a")):
         raise HTTPException(status_code=400, detail="File format not supported")
-    
+
     # Save the uploaded file temporarily
-    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        delete=False, suffix=os.path.splitext(file.filename)[1]
+    ) as temp_file:
         content = await file.read()
         temp_file.write(content)
         temp_file_path = temp_file.name
@@ -28,4 +30,4 @@ async def transcribe_audio(
         return result
     finally:
         # Clean up the temporary file
-        os.unlink(temp_file_path) 
+        os.unlink(temp_file_path)
