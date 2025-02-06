@@ -3,6 +3,8 @@ import pandas as pd
 import json
 import streamlit as st
 from audio_recorder_streamlit import audio_recorder
+import os
+from dotenv import load_dotenv
 
 from utils import (
     call_llm_API,
@@ -16,6 +18,8 @@ from utils import (
     replace_speaker_ids_with_names,
     generate_meeting_analysis_prompts,
 )
+
+load_dotenv()
 
 
 def format_for_llm(segments):
@@ -161,7 +165,8 @@ class MediaProcessor:
             temp_file_path = save_uploaded_file(uploaded_file)
             files = {"file": open(temp_file_path, "rb")}
             response = requests.post(
-                "https://dev.bhub.cloud/api/v1/transcribe/", files=files
+                f"{os.getenv('API_BASE_URL', 'https://dev.bhub.cloud')}/api/v1/transcribe/",
+                files=files
             )
 
             if response.status_code == 200:
@@ -169,9 +174,7 @@ class MediaProcessor:
                 st.session_state.current_transcription = " ".join(
                     [
                         segment["text"]
-                        for segment in st.session_state["transcription_json"][
-                            "segments"
-                        ]
+                        for segment in st.session_state["transcription_json"]["segments"]
                     ]
                 )
                 st.success("Transcription JSON terminée!")

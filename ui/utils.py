@@ -6,8 +6,6 @@ import re
 import streamlit as st
 from olympiabhub import OlympiaAPI
 from docx import Document
-from llama_index.core import Document
-from llama_index.core import VectorStoreIndex
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -19,6 +17,9 @@ MODEL = os.getenv("OLYMPIA_MODEL")
 
 
 def process_transcript_with_rag(transcript, timestamps):
+    from llama_index.core import Document
+    from llama_index.core import VectorStoreIndex
+
     # Create a Document object from the transcript
     documents = [Document(text=transcript)]
 
